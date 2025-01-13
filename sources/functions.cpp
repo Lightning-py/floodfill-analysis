@@ -152,15 +152,20 @@ ull getLenght(PixelCoord first, PixelCoord second) {
 
 void draw(cv::Mat* image, const PixelCoord& leftUp,
           const PixelCoord& rightBottom, Pixel color) {
-    for (int i = leftUp[0]; i < rightBottom[0]; ++i) {
-        setPixel(image, i, leftUp[1], color);
-        setPixel(image, i, rightBottom[1], color);
-    }
+    int thickness = 10;
+    cv::Scalar cvColor(color[0], color[1],
+                       color[2]);  // Предполагаем, что Pixel - это массив из 3
+                                   // значений (B, G, R)
 
-    for (int i = leftUp[1]; i < rightBottom[1]; ++i) {
-        setPixel(image, leftUp[0], i, color);
-        setPixel(image, rightBottom[0], i, color);
-    }
+    cv::rectangle(*image,
+
+                  cv::Point(leftUp[0], leftUp[1]),
+
+                  cv::Point(rightBottom[0], rightBottom[1]),
+
+                  cvColor,
+
+                  thickness);
 }
 
 void image::calculateCoeficient() {
@@ -314,10 +319,13 @@ void image::getApproxymation(segment& segm, bool show) {
             NEW_bottom_right = pixel;
     }
 
-    if (filled[0]) NEW_top_left = top_left;
-    if (filled[1]) NEW_top_right = top_right;
-    if (filled[3]) NEW_bottom_right = bottom_right;
-    if (filled[2]) NEW_bottom_left = bottom_left;
+    if (isBlack(imageObject, top_left[0], top_left[1])) NEW_top_left = top_left;
+    if (isBlack(imageObject, top_right[0], top_right[1]))
+        NEW_top_right = top_right;
+    if (isBlack(imageObject, bottom_right[0], bottom_right[1]))
+        NEW_bottom_right = bottom_right;
+    if (isBlack(imageObject, bottom_left[0], bottom_left[1]))
+        NEW_bottom_left = bottom_left;
 
     // vectPixelCoord rectangularBorderult = {NEW_top_left, NEW_top_right,
     //    NEW_bottom_right, NEW_bottom_left};
@@ -329,13 +337,13 @@ void image::getApproxymation(segment& segm, bool show) {
     // cv::polylines(*imageOutput, ppt, npt, 1, cv::Scalar(0, 255, 255));
     if (show) {
         cv::line(*imageOutput, cv::Point2i(segm.newLeftUp),
-                 cv::Point2i(segm.newRightUp), YELLOW);
+                 cv::Point2i(segm.newRightUp), MAGENTA);
         cv::line(*imageOutput, cv::Point2i(segm.newRightUp),
-                 cv::Point2i(segm.newRightBottom), YELLOW);
+                 cv::Point2i(segm.newRightBottom), MAGENTA);
         cv::line(*imageOutput, cv::Point2i(segm.newRightBottom),
-                 cv::Point2i(segm.newLeftBottom), YELLOW);
+                 cv::Point2i(segm.newLeftBottom), MAGENTA);
         cv::line(*imageOutput, cv::Point2i(segm.newLeftBottom),
-                 cv::Point2i(segm.newLeftUp), YELLOW);
+                 cv::Point2i(segm.newLeftUp), MAGENTA);
     }
 }
 
@@ -480,18 +488,20 @@ void image::getFinalPositions(bool show) {
         }
     }
 
+    int thickness = 10;
+
     if (show) {
         for (auto& arr : segments) {
             for (auto& segm : arr) {
                 if (segm.is_empty) continue;
                 cv::line(*imageOutput, cv::Point2i(segm.newLeftUp),
-                         cv::Point2i(segm.newRightUp), YELLOW);
+                         cv::Point2i(segm.newRightUp), YELLOW, thickness);
                 cv::line(*imageOutput, cv::Point2i(segm.newRightUp),
-                         cv::Point2i(segm.newRightBottom), YELLOW);
+                         cv::Point2i(segm.newRightBottom), YELLOW, thickness);
                 cv::line(*imageOutput, cv::Point2i(segm.newRightBottom),
-                         cv::Point2i(segm.newLeftBottom), YELLOW);
+                         cv::Point2i(segm.newLeftBottom), YELLOW, thickness);
                 cv::line(*imageOutput, cv::Point2i(segm.newLeftBottom),
-                         cv::Point2i(segm.newLeftUp), YELLOW);
+                         cv::Point2i(segm.newLeftUp), YELLOW, thickness);
             }
         }
     }
@@ -512,4 +522,14 @@ void image::getFinalPositions(bool show) {
     //                   << std::endl;
     //     }
     // }
+}
+
+void image::solve() {
+    divideOnSegments(segments_show);
+    getBorder();
+    calculateCoeficient();
+    calculateFilledVertices();
+    calculateRectangularBorder(rectangular_border_show);
+    calculateApproxymation(approxymation_show);
+    getFinalPositions(final_position_show);
 }

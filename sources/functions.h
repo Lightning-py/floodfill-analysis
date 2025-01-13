@@ -21,11 +21,11 @@ typedef unsigned long long ull;
 #define GREEN Pixel(0, 255, 0)
 #define RED Pixel(0, 0, 255)
 #define BLUE Pixel(255, 0, 0)
-#define CYAN Pixel(255, 255, 0)      // Желтый
-#define YELLOW Pixel(0, 255, 255)    // Циан
-#define MAGENTA Pixel(255, 0, 255)   // Магента
-#define GRAY Pixel(128, 128, 128)    // Серый
-#define DARK_GRAY Pixel(64, 64, 64)  // Темно-серый
+#define CYAN Pixel(255, 255, 0)
+#define YELLOW Pixel(0, 255, 255)
+#define MAGENTA Pixel(255, 0, 255)
+#define GRAY Pixel(128, 128, 128)
+#define DARK_GRAY Pixel(64, 64, 64)
 #define LIGHT_GRAY Pixel(192, 192, 192)
 
 struct vertex {
@@ -106,6 +106,13 @@ class image {
     PixelCoord getNeightbourSegment(int i, int j, int number);
     void setNeightbourSegmentCoord(int i, int j, int number, PixelCoord pixel);
     void getFinalPositions(bool show);
+
+    void solve();
+
+    bool segments_show = false;
+    bool rectangular_border_show = false;
+    bool approxymation_show = false;
+    bool final_position_show = false;
 };
 
 #endif  // FUNCTIONS

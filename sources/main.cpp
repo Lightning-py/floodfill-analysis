@@ -1,3 +1,5 @@
+#include <argparse/argparse.hpp>
+
 #include "functions.h"
 
 using namespace cv;
@@ -8,26 +10,88 @@ int main(int argc, char** argv) {
     //     return -1;
     // }
 
-    Mat Image;
-    Image = imread(argv[1], IMREAD_COLOR);
-    int height = std::stoi(std::string(argv[3]));
-    int width = std::stoi(std::string(argv[2]));
-
-    if (Image.empty()) {
-        printf("Error: Unable to open or read image file %s\n", argv[1]);
-        return -1;
-    }
+    // if (Image.empty()) {
+    //     printf("Error: Unable to open or read image file %s\n", argv[1]);
+    //     return -1;
+    // }
 
     // Mat image_output = Mat::zeros(image.rows, image.cols, CV_8UC3);
+
+    // Im.divideOnSegments(true);
+    // Im.getBorder();
+    // Im.calculateCoeficient();
+    // Im.calculateFilledVertices();
+    // Im.calculateRectangularBorder(true);
+    // Im.calculateApproxymation(true);
+    // Im.getFinalPositions(true);
+
+    argparse::ArgumentParser program("floodfill-analysis");
+
+    program.add_argument("-s", "--segments")
+        .help("показывать разделенные сегменты")
+        .default_value(false)
+        .implicit_value(true);
+
+    program.add_argument("-r", "--rectangular-border")
+        .help(
+            "показывать прямоугольную границу (наименьший прямоугольник, в "
+            "который можно вписать фигуру)")
+        .default_value(false)
+        .implicit_value(true);
+
+    program.add_argument("-a", "--approxymation")
+        .help("показывать первичную аппроксимацию фигуры")
+        .default_value(false)
+        .implicit_value(true);
+
+    program.add_argument("-f", "--final-position")
+        .help("показывать финальную аппроксимацию фигуры")
+        .default_value(false)
+        .implicit_value(true);
+
+    program.add_argument("-F", "--file").required();
+
+    program.add_argument("-H", "--height").required().scan<'d', int>();
+
+    program.add_argument("-W", "--width").required().scan<'d', int>();
+
+    try {
+        program.parse_args(argc, argv);
+    } catch (const std::runtime_error& err) {
+        std::cerr << err.what() << std::endl;
+        std::cerr << program;
+        return 1;
+    }
+
+    auto filename = program.get<std::string>("-F");
+    auto height = program.get<int>("-H");
+    auto width = program.get<int>("-W");
+
+    Mat Image;
+    Image = imread(filename, IMREAD_COLOR);
+    // int height = std::stoi(std::string(argv[3]));
+    // int width = std::stoi(std::string(argv[2]));
+
     Mat image_output = Image.clone();
     image Im(height, width, &Image, &image_output);
-    Im.divideOnSegments(false);
-    Im.getBorder();
-    Im.calculateCoeficient();
-    Im.calculateFilledVertices();
-    Im.calculateRectangularBorder(false);
-    Im.calculateApproxymation(false);
-    Im.getFinalPositions(true);
+
+    if (program.get<bool>("--segments")) {
+        Im.segments_show = true;
+    }
+
+    if (program.get<bool>("--rectangular-border")) {
+        Im.rectangular_border_show = true;
+    }
+
+    if (program.get<bool>("--approxymation")) {
+        Im.approxymation_show = true;
+    }
+
+    if (program.get<bool>("--final-position")) {
+        Im.final_position_show = true;
+    }
+
+    Im.solve();
 
     // for (auto i : Im.segments[0][0].filledVertices) std::cout << i << "\t";
     // std::cout << std::endl;
@@ -86,7 +150,7 @@ int main(int argc, char** argv) {
     // cv::line(image_output, cv::Point2i(approxymation[3]),
     //          cv::Point2i(approxymation[0]), RED);
 
-    cv::imwrite(strcat(argv[1], "_output.png"), image_output);
+    cv::imwrite(filename + "_output.png", image_output);
 
     return 0;
 }
